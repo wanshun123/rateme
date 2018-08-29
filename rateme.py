@@ -35,7 +35,7 @@ for i in submissions:
     submissions[count] = i + (age[count],sex[count],)
     count += 1
 
-comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=100))
+comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=10000))
 comments = [v[::2] for v in comments]
 comments = [v[0:2] for v in comments]
 
@@ -55,18 +55,16 @@ for i in comments:
 
 for i in ratings:
     i[1] = i[1][3:]
- 
+
 # loop through all submissions, get the link_id at submissions[0],  
-    
+
 count = 0
 for i in submissions:
     ratingsArray = []
     for j in ratings:
         if i[0] == j[1]:
             ratingsArray.append(j[0])
-            #print('match')
     if len(ratingsArray) > 0:
-        #print(str(ratingsArray))
         ratingsArray = [float(i) for i in ratingsArray]
         average = sum(ratingsArray)/len(ratingsArray)
         submissions[count] = i + (average,)
