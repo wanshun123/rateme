@@ -8,26 +8,37 @@ https://github.com/dmarx/psaw
 
 from psaw import PushshiftAPI
 api = PushshiftAPI()
+import re
 
 submissions = list(api.search_submissions(subreddit='rateme',
                             filter=['url','id', 'title'],
                             limit=50))
 submissions = [v[1:4] for v in submissions]
 
-import re
-p = re.compile("[0-9]+\/? ?[MmFf]|[MmFf]\/? ?[0-9]+")
-#p.findall(submissions[0][1])[0]
-
-#re.search("[0-9]+\/? ?[MmFf]|[MmFf]\/? ?[0-9]+", submissions[3][1])[0]
-
 age = []
 sex = []
 
+p = re.compile("[0-9]+\/? ?[MmFf]|[MmFf]\/? ?[0-9]+")
+
 for i in submissions:
     if len(p.findall(i[1])) > 0:
-        print(p.findall(i[1])[0] + ' is the complete match')
-        re.search("[MmFf]", p.findall(i[1])[0])[0]
-        re.search("[0-9]+", p.findall(i[1])[0])[0]
+        # there is a regex match for something like 22M, so append the gender and age to those arrays
+        # p.findall(i[1])[0]) is item at index 0 (ie. first match) for finding the complicated regex string above in the title (which is i[1]), and we're appending the first match of [0-9]+ and [MmFf] for those
+        age.append(re.search("[0-9]+", p.findall(i[1])[0])[0])
+        sex.append(re.search("[MmFf]", p.findall(i[1])[0])[0])
+        #re.search("[0-9]+", p.findall(i[1])[0])[0]
+        #re.search("[MmFf]", p.findall(i[1])[0])[0]
+    else:
+        age.append('NA')
+        sex.append('NA')
+    #i = i + (age[i],sex[i])
+    
+#submissions = [v[::2] for v in submissions]
+
+count = 0
+for i in submissions:
+    submissions[count] = i + (age[count],sex[count],)
+    count += 1
     
 comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=10))
 comments = [v[::2] for v in comments]
