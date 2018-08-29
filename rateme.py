@@ -9,14 +9,17 @@ https://github.com/dmarx/psaw
 from psaw import PushshiftAPI
 api = PushshiftAPI()
 
-result = list(api.search_submissions(subreddit='rateme',
+submissions = list(api.search_submissions(subreddit='rateme',
                             filter=['url','id', 'title'],
                             limit=10))
-result = [v[1:4] for v in result]
+submissions = [v[1:4] for v in result]
                             
-test = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=10))
-test = [v[::2] for v in test]
-test = [v[0:2] for v in test]
+comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=10))
+comments = [v[::2] for v in comments]
+comments = [v[0:2] for v in comments]
+
+for i in comments:
+    i[1][3:]
 
 '''
 links = []
