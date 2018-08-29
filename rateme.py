@@ -57,7 +57,7 @@ for i in ratings:
     i[1] = i[1][3:]
     
 count = 0
-for i in ratings:
+for i in submissions:
     ratingsForSubmission = [x for x in ratings[count][1] if x == submissions[count][0]]
     if len(ratingsForSubmission) > 0:
         print('found')
@@ -65,6 +65,31 @@ for i in ratings:
         submissions[count] = i + (average,)
     count += 1
     
+count = 0
+for i in submissions:
+    ratingsForSubmission = [x for x in ratings[count][1] if x == '9ap00u']
+    if len(ratingsForSubmission) > 0:
+        print('found')
+        average = sum(ratingsForSubmission)/len(ratingsForSubmission)
+        submissions[count] = i + (average,)
+    count += 1
+ 
+count = 0
+for i in submissions:
+    ratingsArray = []
+    #print(i[0])
+    if i[0] == ratings[count][1]:
+        ratingsArray.append(ratings[count][0])
+    if len(ratingsArray) > 0:
+        ratingsArray = [float(i) for i in ratingsArray]
+        average = sum(ratingsArray)/len(ratingsArray)
+        submissions[count] = i + (average,)
+        #print('found! ' + str(ratingsArray))
+        #print(count)
+        #print(i)
+        #print(ratings[count])
+    count += 1
+
 '''
 links = []
 for i in result:
