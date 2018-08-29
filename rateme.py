@@ -10,9 +10,7 @@ from psaw import PushshiftAPI
 api = PushshiftAPI()
 import re
 
-submissions = list(api.search_submissions(subreddit='rateme',
-                            filter=['url','id', 'title'],
-                            limit=50))
+submissions = list(api.search_submissions(subreddit='rateme',filter=['url','id', 'title'],limit=50))
 submissions = [v[1:4] for v in submissions]
 
 age = []
@@ -26,12 +24,9 @@ for i in submissions:
         # p.findall(i[1])[0]) is item at index 0 (ie. first match) for finding the complicated regex string above in the title (which is i[1]), and we're appending the first match of [0-9]+ and [MmFf] for those
         age.append(re.search("[0-9]+", p.findall(i[1])[0])[0])
         sex.append(re.search("[MmFf]", p.findall(i[1])[0])[0])
-        #re.search("[0-9]+", p.findall(i[1])[0])[0]
-        #re.search("[MmFf]", p.findall(i[1])[0])[0]
     else:
         age.append('NA')
         sex.append('NA')
-    #i = i + (age[i],sex[i])
     
 #submissions = [v[::2] for v in submissions]
 
@@ -47,27 +42,29 @@ comments = [v[0:2] for v in comments]
 p = re.compile("[0-10]\.?[0-9]?\/10")
 
 ratings = []
-ratingsList = []
 
-# should get rid of all comments that don't have a rating
+# get rid of all comments that don't have a rating, and isolate the ratings
 
 count = 0
 for i in comments:
     if len(p.findall(i[0])) > 0:
-        # rating out of 10 found (hopefully)
-        #ratings.append(p.findall(i[0])[0])
-        #ratingsList[count] = (p.findall(i[0])[0],i[1])
         ratings.append([re.search("[0-9]\.?[0-9]?", p.findall(i[0])[0])[0], i[1]])
-        #ratings.append([p.findall(i[0])[0], i[1]])
-        #print('rating found in --- ' + i[0] + ' ---. count = ' + str(count))
-    else:
-        print('deleting comment in --- ' + i[0] + ' --- since no rating. count = ' + str(count))
-        #del comments[count]
     count += 1
     
-for i in comments:
-    i[1][3:]
+# get rid of the t3_ in ratings[]
 
+for i in ratings:
+    i[1] = i[1][3:]
+    
+count = 0
+for i in ratings:
+    ratingsForSubmission = [x for x in ratings[count][1] if x == submissions[count][0]]
+    if len(ratingsForSubmission) > 0:
+        print('found')
+        average = sum(ratingsForSubmission)/len(ratingsForSubmission)
+        submissions[count] = i + (average,)
+    count += 1
+    
 '''
 links = []
 for i in result:
