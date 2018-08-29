@@ -35,11 +35,11 @@ for i in submissions:
     submissions[count] = i + (age[count],sex[count],)
     count += 1
     
-comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=10))
+comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=100))
 comments = [v[::2] for v in comments]
 comments = [v[0:2] for v in comments]
 
-p = re.compile("[0-10]\.?[0-9]?\/10")
+p = re.compile("(10|[0-9])\.?[0-9]?\/10")
 
 ratings = []
 
@@ -48,7 +48,7 @@ ratings = []
 count = 0
 for i in comments:
     if len(p.findall(i[0])) > 0:
-        ratings.append([re.search("[0-9]\.?[0-9]?", p.findall(i[0])[0])[0], i[1]])
+        ratings.append([re.search("(10|[0-9])\.?[0-9]?", p.findall(i[0])[0])[0], i[1]])
     count += 1
     
 # get rid of the t3_ in ratings[]
