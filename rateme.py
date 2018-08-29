@@ -12,7 +12,11 @@ api = PushshiftAPI()
 submissions = list(api.search_submissions(subreddit='rateme',
                             filter=['url','id', 'title'],
                             limit=10))
-submissions = [v[1:4] for v in result]
+submissions = [v[1:4] for v in submissions]
+
+import re
+p = re.compile("[0-9]+\/? ?[MmFf]|[MmFf]\/? ?[0-9]+")
+p.findall(submissions[1][1])[0]
                             
 comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=10))
 comments = [v[::2] for v in comments]
