@@ -44,6 +44,27 @@ comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id
 comments = [v[::2] for v in comments]
 comments = [v[0:2] for v in comments]
 
+p = re.compile("[0-10]\.?[0-9]?\/10")
+
+ratings = []
+ratingsList = []
+
+# should get rid of all comments that don't have a rating
+
+count = 0
+for i in comments:
+    if len(p.findall(i[0])) > 0:
+        # rating out of 10 found (hopefully)
+        #ratings.append(p.findall(i[0])[0])
+        #ratingsList[count] = (p.findall(i[0])[0],i[1])
+        ratings.append([re.search("[0-9]\.?[0-9]?", p.findall(i[0])[0])[0], i[1]])
+        #ratings.append([p.findall(i[0])[0], i[1]])
+        #print('rating found in --- ' + i[0] + ' ---. count = ' + str(count))
+    else:
+        print('deleting comment in --- ' + i[0] + ' --- since no rating. count = ' + str(count))
+        #del comments[count]
+    count += 1
+    
 for i in comments:
     i[1][3:]
 
