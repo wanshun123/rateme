@@ -10,7 +10,7 @@ from psaw import PushshiftAPI
 api = PushshiftAPI()
 import re
 
-submissions = list(api.search_submissions(subreddit='rateme',filter=['url','id', 'title'],limit=50))
+submissions = list(api.search_submissions(subreddit='rateme',filter=['url','id', 'title'],limit=100))
 submissions = [v[1:4] for v in submissions]
 
 age = []
@@ -34,8 +34,8 @@ count = 0
 for i in submissions:
     submissions[count] = i + (age[count],sex[count],)
     count += 1
-    
-comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=500))
+
+comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit=100))
 comments = [v[::2] for v in comments]
 comments = [v[0:2] for v in comments]
 
@@ -55,42 +55,24 @@ for i in comments:
 
 for i in ratings:
     i[1] = i[1][3:]
-    
-count = 0
-for i in submissions:
-    ratingsForSubmission = [x for x in ratings[count][1] if x == submissions[count][0]]
-    if len(ratingsForSubmission) > 0:
-        print('found')
-        average = sum(ratingsForSubmission)/len(ratingsForSubmission)
-        submissions[count] = i + (average,)
-    count += 1
-    
-count = 0
-for i in submissions:
-    ratingsForSubmission = [x for x in ratings[count][1] if x == '9ap00u']
-    if len(ratingsForSubmission) > 0:
-        print('found')
-        average = sum(ratingsForSubmission)/len(ratingsForSubmission)
-        submissions[count] = i + (average,)
-    count += 1
  
+# loop through all submissions, get the link_id at submissions[0],  
+    
 count = 0
 for i in submissions:
     ratingsArray = []
-    #print(i[0])
-    if i[0] == ratings[count][1]:
-        ratingsArray.append(ratings[count][0])
+    for j in ratings:
+        if i[0] == j[1]:
+            ratingsArray.append(j[0])
+            #print('match')
     if len(ratingsArray) > 0:
+        #print(str(ratingsArray))
         ratingsArray = [float(i) for i in ratingsArray]
         average = sum(ratingsArray)/len(ratingsArray)
         submissions[count] = i + (average,)
-        #print('found! ' + str(ratingsArray))
-        #print(count)
-        #print(i)
-        #print(ratings[count])
     count += 1
 
-'''
+    '''
 links = []
 for i in result:
     links.append(i[1])
