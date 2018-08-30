@@ -155,7 +155,8 @@ for i in submissionsDR[0:50]:
         except urllib.error.URLError as e:
             print('URLError: {}'.format(e.reason))
         else:
-            urllib.request.urlretrieve(url, str(count) + '.jpg')
+            fullfilename = os.path.join('images/', str(count) + '.jpg')
+            urllib.request.urlretrieve(url, fullfilename)
             print('downloaded image ' + str(url))
             submissionsClean.append(i)
             count += 1
@@ -180,7 +181,8 @@ for i in submissionsDR[0:50]:
                 image = mystr[indexStart + 39:indexStart + 39 + 31]
                 if image[len(image) - 1:] != ' ':
                     print('downloading gallery image ' + str(image) + '...')
-                    urllib.request.urlretrieve(image, str(count) + '.jpg')
+                    fullfilename = os.path.join('images/', str(count) + '.jpg')
+                    urllib.request.urlretrieve(image, fullfilename)
                     print('gallery image downloaded')
                     submissionsClean.append(i)
                     count += 1
