@@ -45,22 +45,22 @@ count = 0
 submissionsDirect = []
 
 for i in submissions:
-    if "i.redd.it" in i[2]:
+    if ("i.redd.it" in i[2]) or ("imgur" in i[2]):
         submissionsDirect.append(i)
     count += 1
 
-# get count of entries in submissions that link straight to i.redd.it if you want 
-'''
-count = 0
-for i in submissions:
-    if "i.redd.it" in i[2]:
-        #print('found')
-        count += 1
-'''
-        
+# get count of entries in submissions that link to a certain URL, eg. url = "i.redd.it" or url = "imgur"
+
+def urlcount(url):
+    count = 0
+    for i in submissions:
+        if url in i[2]:
+            count += 1
+    return count
+
 # pull comments
     
-comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id'], limit = 1000))
+comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id']))
 comments = [v[::2] for v in comments]
 comments = [v[0:2] for v in comments]
 
@@ -74,7 +74,6 @@ count = 0
 for i in comments:
     if len(p.findall(i[0])) > 0:
         rating = re.search("[0-9]\.?[0-9]?", p.findall(i[0])[0])[0]
-        #print(rating)
         ratings.append([rating, i[1], i[0]])
         comments[count] = i + (rating,)
     count += 1
@@ -96,10 +95,15 @@ def returnRatings(link_id):
     if len(ratingsArray) > 0:
         ratingsArray = [float(i) for i in ratingsArray]
         print('average of ' + str(sum(ratingsArray)/len(ratingsArray)))
+    else:
+        print('no ratings yet')
 
 # loop through all submissions (only those in submissionsDirect that are direct image links), check if the link_id at submissionsDirect[0] (which is i[0] here) matches each rating entry at j[1], make a ratings array for each submission, then get the average of ratings and add that to the submissionsDirect list under its relevant submission
 
+submissionsDR = []
+
 count = 0
+totalAdditions = 0
 for i in submissionsDirect:
     ratingsArray = []
     for j in ratings:
@@ -108,8 +112,62 @@ for i in submissionsDirect:
     if len(ratingsArray) > 0:
         ratingsArray = [float(i) for i in ratingsArray]
         average = sum(ratingsArray)/len(ratingsArray)
-        submissionsDirect[count] = i + (average,)
-        print('rating added for submission at index ' + str(count))
+        #SubmissionsDR[totalAdditions] = i + (average,)
+        submissionsDR.append(i + (average,))
+        totalAdditions += 1
+        print('rating added to submissionsDR for submission from submissionsDirect at index ' + str(count) + ' ~ ' + str(totalAdditions))
     count += 1
+
+import os
+os.getcwd()
+    
+import io
+with io.open('submissionsDR.txt', 'w', encoding="utf-8") as filehandle:
+    for i in submissionsDR:
+        filehandle.write(str(i))
+        
+# https://github.com/Imgur/imgurpython
+# download the first image of each submission
+        
+from imgurpython import ImgurClient
+client_id = '640932c9d26a059'
+client_secret = '16fb29a6a4c454940097d570e88d68dac04c3004'
+client = ImgurClient(client_id, client_secret)
+
+# to download images
+
+import urllib.request, urllib.error
+#urllib.request.urlretrieve("https://i.redd.it/0u4qa4luh3j11.jpg", "1.jpg")
+
+# get gallery ID for images posted to imgur - should be 7 characters at end of URL
+
+count = 0
+for i in submissionsDR[0:50]:
+    url = i[2]
+    if "i.redd.it" in url:
+        print('downloading single image ' + str(url) + '...')
+        request = urllib.request.urlopen(url)
+        print(request.getcode())
+        if urllib.request.urlopen(url).getcode() != '404':
+            print(urllib.request.urlopen(url).getcode() + '???')
+            urllib.request.urlretrieve(url, str(count) + '.jpg')
+        else:
+            print('problem with image 404')
+    else:
+        # imgur album
+        galleryID = url[-7:]
+        print('quering gallery ID ' + str(galleryID) + '...')
+        galleryPhotos = client.get_album_images(galleryID)
+        image = galleryPhotos[0].link
+        print('downloading gallery image ' + str(image) + '...')
+        urllib.request.urlretrieve(image, str(count) + '.jpg')
+        print('gallery image downloaded')
+    count += 1
+
+items = client.get_album_images('EzdTo6E')
+for item in items:
+    print(item.link)
+    
+firstImage = items[0].link
 
 
