@@ -140,30 +140,47 @@ import urllib.request, urllib.error
 #urllib.request.urlretrieve("https://i.redd.it/0u4qa4luh3j11.jpg", "1.jpg")
 
 # get gallery ID for images posted to imgur - should be 7 characters at end of URL
+# can also make another submissions array containing only submissions with a valid link
+
+submissionsClean = []
 
 count = 0
 for i in submissionsDR[0:50]:
     url = i[2]
     if "i.redd.it" in url:
         print('downloading single image ' + str(url) + '...')
-        request = urllib.request.urlopen(url)
-        print(request.getcode())
-        if urllib.request.urlopen(url).getcode() != '404':
-            print(urllib.request.urlopen(url).getcode() + '???')
-            urllib.request.urlretrieve(url, str(count) + '.jpg')
+        try:
+            conn = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            print('HTTPError: {}'.format(e.code))
+        except urllib.error.URLError as e:
+            print('URLError: {}'.format(e.reason))
         else:
-            print('problem with image 404')
+            urllib.request.urlretrieve(url, str(count) + '.jpg')
+            print('downloaded image ' + str(url))
+            submissionsClean.append(i)
     else:
         # imgur album
         galleryID = url[-7:]
         print('quering gallery ID ' + str(galleryID) + '...')
-        galleryPhotos = client.get_album_images(galleryID)
-        image = galleryPhotos[0].link
-        print('downloading gallery image ' + str(image) + '...')
-        urllib.request.urlretrieve(image, str(count) + '.jpg')
-        print('gallery image downloaded')
+        try:
+            conn = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            print('HTTPError: {}'.format(e.code))
+        except urllib.error.URLError as e:
+            print('URLError: {}'.format(e.reason))
+        else:
+            galleryPhotos = client.get_album_images(galleryID)
+            if len(galleryPhotos) > 0:
+                image = galleryPhotos[0].link
+                print('downloading gallery image ' + str(image) + '...')
+                urllib.request.urlretrieve(image, str(count) + '.jpg')
+                print('gallery image downloaded')
+                submissionsClean.append(i)
+            else:
+                print('no images in this gallery')
     count += 1
-
+    
 items = client.get_album_images('EzdTo6E')
 for item in items:
     print(item.link)
