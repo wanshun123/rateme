@@ -143,7 +143,6 @@ import urllib.request, urllib.error
 # can also make another submissions array containing only submissions with a valid link
 
 submissionsClean = []
-
 count = 0
 for i in submissionsDR[0:50]:
     url = i[2]
@@ -159,6 +158,7 @@ for i in submissionsDR[0:50]:
             urllib.request.urlretrieve(url, str(count) + '.jpg')
             print('downloaded image ' + str(url))
             submissionsClean.append(i)
+            count += 1
     else:
         # imgur album
         galleryID = url[-7:]
@@ -170,16 +170,24 @@ for i in submissionsDR[0:50]:
         except urllib.error.URLError as e:
             print('URLError: {}'.format(e.reason))
         else:
-            galleryPhotos = client.get_album_images(galleryID)
-            if len(galleryPhotos) > 0:
-                image = galleryPhotos[0].link
-                print('downloading gallery image ' + str(image) + '...')
-                urllib.request.urlretrieve(image, str(count) + '.jpg')
-                print('gallery image downloaded')
-                submissionsClean.append(i)
+            #galleryPhotos = client.get_album_images(galleryID)
+            fp = urllib.request.urlopen(url)
+            mybytes = fp.read()
+            mystr = mybytes.decode("utf8")
+            fp.close()
+            indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
+            if indexStart > 0:
+                image = mystr[indexStart + 39:indexStart + 39 + 31]
+                if image[len(image) - 1:] != ' ':
+                    print('downloading gallery image ' + str(image) + '...')
+                    urllib.request.urlretrieve(image, str(count) + '.jpg')
+                    print('gallery image downloaded')
+                    submissionsClean.append(i)
+                    count += 1
+                else:
+                    print('gallery was loaded, but no images inside')
             else:
                 print('no images in this gallery')
-    count += 1
 
     
 from bs4 import BeautifulSoup
@@ -207,7 +215,6 @@ fp = urllib.request.urlopen("https://imgur.com/gallery/wCHERzZ")
 mybytes = fp.read()
 mystr = mybytes.decode("utf8")
 fp.close()
-
 indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
 url = mystr[indexStart + 39:indexStart + 39 + 31]
 
