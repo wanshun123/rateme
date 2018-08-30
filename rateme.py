@@ -180,10 +180,43 @@ for i in submissionsDR[0:50]:
             else:
                 print('no images in this gallery')
     count += 1
+
+    
+from bs4 import BeautifulSoup
+data = urllib.request.urlopen('https://imgur.com/gallery/wCHERzZ').read()
+soup = BeautifulSoup(data)
+soup = BeautifulSoup(data, 'html.parser')
+# a = soup.find(rel="image_src")
+# url = a[11:32]
+
+for link in soup.find_all('link'):
+    print(link.get('href'))
+
+for link in soup.find_all('link'):
+    print(link.get('rel'))
+
+for link in soup.find_all('rel'):
+    print(link.get('href'))
+    
+    
+<link rel="image_src"            href="https://i.imgur.com/UIWp1Rk.jpg"
+
+###
+
+fp = urllib.request.urlopen("https://imgur.com/gallery/wCHERzZ")
+mybytes = fp.read()
+mystr = mybytes.decode("utf8")
+fp.close()
+
+indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
+url = mystr[indexStart + 39:indexStart + 39 + 31]
+
+###
     
 items = client.get_album_images('EzdTo6E')
 for item in items:
     print(item.link)
+    
     
 firstImage = items[0].link
 
