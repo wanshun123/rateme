@@ -153,8 +153,7 @@ import urllib.request, urllib.error
 submissionsClean = []
 count = 0
 index = 0
-#for i in submissionsDR[429:len(submissionsDR)]:
-for i in submissionsDR:
+for i in submissionsDR[429:len(submissionsDR)]:
     url = i[2]
     #print(str(index) + ': ' + str(i) + ' starting...')
     if (".jpg" in url) or (".jpeg" in url) or (".png" in url) or (".gif" in url):
