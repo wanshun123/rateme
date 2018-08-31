@@ -1,10 +1,12 @@
+'''
+
 # /r/rateme
 # scraper to view all submissions and scrape ONE image only - preferrably directly off page - then use face detection to only use submissions with exactly one face detected (plenty of data)
 # in scraper, scrape all ratings (in a form like "n/10") and take the average (of course disregard scrapes with no number ratings) - could even do text sentiment analysis? (later)
 
 https://github.com/dmarx/psaw
 
----
+'''
 
 from psaw import PushshiftAPI
 api = PushshiftAPI()
@@ -118,21 +120,25 @@ for i in submissionsDirect:
         print('rating added to submissionsDR for submission from submissionsDirect at index ' + str(count) + ' ~ ' + str(totalAdditions))
     count += 1
 
-import os
-os.getcwd()
+#import os
+#os.getcwd()
     
+'''
 import io
 with io.open('submissionsDR.txt', 'w', encoding="utf-8") as filehandle:
     for i in submissionsDR:
         filehandle.write(str(i))
+'''
         
 # https://github.com/Imgur/imgurpython
 # download the first image of each submission
-        
+
+'''        
 from imgurpython import ImgurClient
 client_id = '640932c9d26a059'
 client_secret = '16fb29a6a4c454940097d570e88d68dac04c3004'
 client = ImgurClient(client_id, client_secret)
+'''
 
 # to download images
 
@@ -171,7 +177,6 @@ for i in submissionsDR[0:50]:
         except urllib.error.URLError as e:
             print('URLError: {}'.format(e.reason))
         else:
-            #galleryPhotos = client.get_album_images(galleryID)
             fp = urllib.request.urlopen(url)
             mybytes = fp.read()
             mystr = mybytes.decode("utf8")
@@ -191,42 +196,145 @@ for i in submissionsDR[0:50]:
             else:
                 print('no images in this gallery')
 
-    
-from bs4 import BeautifulSoup
-data = urllib.request.urlopen('https://imgur.com/gallery/wCHERzZ').read()
-soup = BeautifulSoup(data)
-soup = BeautifulSoup(data, 'html.parser')
-# a = soup.find(rel="image_src")
-# url = a[11:32]
+# make an even cleaner submissions list by only including those with an age and sex
+                
+sc = []
 
-for link in soup.find_all('link'):
-    print(link.get('href'))
+for i in submissionsClean:
+    if i[3] != 'NA':
+        sc.append(i)
+        
+# pure ratings
 
-for link in soup.find_all('link'):
-    print(link.get('rel'))
+pr = []
 
-for link in soup.find_all('rel'):
-    print(link.get('href'))
+for i in submissionsClean:
+    pr.append(i[5])
     
+# start analysis
+# run a face detection script and save only THOSE images - won't work if images are all different aspect ratios - face detection script will make square images containing just the face
+
+local_download_path = os.path.expanduser('images')
+
+import glob
+import cv2
+
+images = []
+files = glob.glob(local_download_path + '/*.jpg')
+for myFile in sorted(files):
+    image = cv2.imread(myFile)
+    images.append(image)
+
+height = []
+width = []
+for i in images:
+    height.append(i.shape[0])
+    width.append(i.shape[1])
+
+avgHeight = round(sum(height)/len(height))
+avgWidth = round(sum(width)/len(width))
+
+count = 0
+for i in images:
+    images[count] = cv2.resize(i, (avgWidth, avgHeight))
+    count += 1
     
-<link rel="image_src"            href="https://i.imgur.com/UIWp1Rk.jpg"
+from sklearn.model_selection import train_test_split
+    
+images_train, images_test, labels_train, labels_test = train_test_split(images, pr, test_size=0.2)
+
+images_train = np.array(images_train)
+labels_train = np.array(labels_train)
+images_test = np.array(images_test)
+labels_test = np.array(labels_test)
+
+
+
+
+
+
+
+
+
+
 
 ###
 
-fp = urllib.request.urlopen("https://imgur.com/gallery/wCHERzZ")
-mybytes = fp.read()
-mystr = mybytes.decode("utf8")
-fp.close()
-indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
-url = mystr[indexStart + 39:indexStart + 39 + 31]
+'''
 
-###
-    
-items = client.get_album_images('EzdTo6E')
-for item in items:
-    print(item.link)
-    
-    
-firstImage = items[0].link
+3 different models: predict attractiveness, age and gender
+gender: Binary classification sigmoid binary_crossentropy (pg 114)
+age: Multiclass, single-label classification softmax categorical_crossentropy
+
+Choosing the right last-layer activation and loss function for your model
+Problem type Last-layer activation Loss function
+Binary classification sigmoid binary_crossentropy
+Multiclass, single-label classification softmax categorical_crossentropy
+Multiclass, multilabel classification sigmoid binary_crossentropy
+Regression to arbitrary values None mse
+Regression to values between 0 and 1 sigmoid mse or binary_crossentropy
 
 
+'''
+
+# predicting gender pg 134, pg 145
+
+
+
+
+
+
+
+
+from keras import layers
+from keras import models
+from keras import optimizers
+from keras.preprocessing.image import ImageDataGenerator
+
+model = models.Sequential()
+model.add(layers.Conv2D(32, (3, 3), activation='relu',
+input_shape=(150, 150, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Flatten())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(512, activation='relu'))
+model.add(layers.Dense(1, activation='sigmoid'))
+model.compile(loss='binary_crossentropy',
+optimizer=optimizers.RMSprop(lr=1e-4),
+metrics=['acc'])
+
+train_datagen = ImageDataGenerator(
+rescale=1./255,
+rotation_range=40,
+width_shift_range=0.2,
+height_shift_range=0.2,
+shear_range=0.2,
+zoom_range=0.2,
+horizontal_flip=True,)
+
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+train_dir,
+target_size=(150, 150),
+batch_size=32,
+class_mode='binary')
+
+validation_generator = test_datagen.flow_from_directory(
+validation_dir,
+target_size=(150, 150),
+batch_size=32,
+class_mode='binary')
+
+history = model.fit_generator(
+train_generator,
+steps_per_epoch=100,
+epochs=100,
+validation_data=validation_generator,
+validation_steps=50)
