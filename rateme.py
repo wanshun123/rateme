@@ -102,6 +102,8 @@ def returnRatings(link_id):
 
 # loop through all submissions (only those in submissionsDirect that are direct image links), check if the link_id at submissionsDirect[0] (which is i[0] here) matches each rating entry at j[1], make a ratings array for each submission, then get the average of ratings and add that to the submissionsDirect list under its relevant submission
 
+# this takes some time, so best to save the submissionsDR list after it's done
+
 submissionsDR = []
 
 count = 0
@@ -125,8 +127,8 @@ for i in submissionsDirect:
     
 '''
 import io
-with io.open('submissionsDR.txt', 'w', encoding="utf-8") as filehandle:
-    for i in submissionsDR:
+with io.open('comments.txt', 'w', encoding="utf-8") as filehandle:
+    for i in comments:
         filehandle.write(str(i))
 '''
         
@@ -150,26 +152,29 @@ import urllib.request, urllib.error
 
 submissionsClean = []
 count = 0
-for i in submissionsDR[0:50]:
+index = 0
+#for i in submissionsDR[429:len(submissionsDR)]:
+for i in submissionsDR:
     url = i[2]
-    if "i.redd.it" in url:
-        print('downloading single image ' + str(url) + '...')
+    #print(str(index) + ': ' + str(i) + ' starting...')
+    if (".jpg" in url) or (".jpeg" in url) or (".png" in url) or (".gif" in url):
         try:
             conn = urllib.request.urlopen(url)
         except urllib.error.HTTPError as e:
-            print('HTTPError: {}'.format(e.code))
+            print(str(index) + ': HTTPError: {}'.format(e.code))
         except urllib.error.URLError as e:
-            print('URLError: {}'.format(e.reason))
+            print(str(index) + ': URLError: {}'.format(e.reason))
         else:
-            fullfilename = os.path.join('images/', str(count) + '.jpg')
+            fullfilename = os.path.join('Pictures/', str(count) + '.jpg')
             urllib.request.urlretrieve(url, fullfilename)
-            print('downloaded image ' + str(url))
+            #print('downloaded image ' + str(url))
+            print(str(index) + ': successful')
             submissionsClean.append(i)
             count += 1
     else:
         # imgur album
         galleryID = url[-7:]
-        print('quering gallery ID ' + str(galleryID) + '...')
+        #print('quering gallery ID ' + str(galleryID) + '...')
         try:
             conn = urllib.request.urlopen(url)
         except urllib.error.HTTPError as e:
@@ -185,16 +190,17 @@ for i in submissionsDR[0:50]:
             if indexStart > 0:
                 image = mystr[indexStart + 39:indexStart + 39 + 31]
                 if image[len(image) - 1:] != ' ':
-                    print('downloading gallery image ' + str(image) + '...')
-                    fullfilename = os.path.join('images/', str(count) + '.jpg')
+                    #print('downloading gallery image ' + str(image) + '...')
+                    fullfilename = os.path.join('Pictures/', str(count) + '.jpg')
                     urllib.request.urlretrieve(image, fullfilename)
-                    print('gallery image downloaded')
+                    print(str(index) + 'successful')
                     submissionsClean.append(i)
                     count += 1
                 else:
-                    print('gallery was loaded, but no images inside')
+                    print(str(index) + 'gallery was loaded, but no images inside')
             else:
-                print('no images in this gallery')
+                print(str(index) + 'no images in this gallery')
+    index += 1
 
 # make an even cleaner submissions list by only including those with an age and sex
                 
@@ -213,6 +219,47 @@ for i in submissionsClean:
     
 # start analysis
 # run a face detection script and save only THOSE images - won't work if images are all different aspect ratios - face detection script will make square images containing just the face
+
+import cv2
+import glob
+
+cascPath = "haarcascade_frontalface_default.xml"
+faceCascade = cv2.CascadeClassifier(cascPath)
+
+count = 0
+files = glob.glob ("images/*.jpg")
+for myFile in files:
+    print(myFile)
+    image = cv2.imread(myFile)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    faces = faceCascade.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(30, 30),
+        )
+    print("Found {0} faces!".format(len(faces)))
+    for (x, y, w, h) in faces:
+        #cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        print('width of',w)
+        print('height of',h)
+        print('x location',x)
+        print('y location',y)
+    roi = image[y:y+h, x:x+w]
+    cv2.imwrite(str(count) + '.jpg', roi)
+    count += 1
+        #
+        #cv2.imshow("Faces found", image)
+        #cv2.waitKey(1000)
+        #cv2.destroyAllWindows()
+
+
+import face_recognition
+image = face_recognition.load_image_file("1.jpg")
+face_locations = face_recognition.face_locations(image)
+
+
+
 
 local_download_path = os.path.expanduser('images')
 
