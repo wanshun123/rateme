@@ -122,26 +122,6 @@ for i in submissionsDirect:
         print('rating added to submissionsDR for submission from submissionsDirect at index ' + str(count) + ' ~ ' + str(totalAdditions))
     count += 1
 
-#import os
-#os.getcwd()
-    
-'''
-import io
-with io.open('comments.txt', 'w', encoding="utf-8") as filehandle:
-    for i in comments:
-        filehandle.write(str(i))
-'''
-        
-# https://github.com/Imgur/imgurpython
-# download the first image of each submission
-
-'''        
-from imgurpython import ImgurClient
-client_id = '640932c9d26a059'
-client_secret = '16fb29a6a4c454940097d570e88d68dac04c3004'
-client = ImgurClient(client_id, client_secret)
-'''
-
 # to download images
 
 import urllib.request, urllib.error
@@ -151,9 +131,20 @@ import urllib.request, urllib.error
 # can also make another submissions array containing only submissions with a valid link
 
 submissionsClean = []
+
+
+
+import time
+
+#count = 6847
+#index = 9690
 count = 0
 index = 0
-for i in submissionsDR[429:len(submissionsDR)]:
+for i in submissionsDR[index:len(submissionsDR)]:
+    if index % 100 == 0:
+        #sleep for a bit
+        print('taking a nap...')
+        time.sleep(5)
     url = i[2]
     #print(str(index) + ': ' + str(i) + ' starting...')
     if (".jpg" in url) or (".jpeg" in url) or (".png" in url) or (".gif" in url):
@@ -167,11 +158,12 @@ for i in submissionsDR[429:len(submissionsDR)]:
             fullfilename = os.path.join('Pictures/', str(count) + '.jpg')
             urllib.request.urlretrieve(url, fullfilename)
             #print('downloaded image ' + str(url))
-            print(str(index) + ': successful')
+            print(str(index) + ': Successful')
             submissionsClean.append(i)
             count += 1
     else:
         # imgur album
+        time.sleep(0.1)
         galleryID = url[-7:]
         #print('quering gallery ID ' + str(galleryID) + '...')
         try:
@@ -183,23 +175,55 @@ for i in submissionsDR[429:len(submissionsDR)]:
         else:
             fp = urllib.request.urlopen(url)
             mybytes = fp.read()
-            mystr = mybytes.decode("utf8")
-            fp.close()
-            indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
-            if indexStart > 0:
-                image = mystr[indexStart + 39:indexStart + 39 + 31]
-                if image[len(image) - 1:] != ' ':
-                    #print('downloading gallery image ' + str(image) + '...')
-                    fullfilename = os.path.join('Pictures/', str(count) + '.jpg')
-                    urllib.request.urlretrieve(image, fullfilename)
-                    print(str(index) + 'successful')
-                    submissionsClean.append(i)
-                    count += 1
+            try:
+                mystr = mybytes.decode("utf8")
+                fp.close()
+                indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
+                if indexStart > 0:
+                    image = mystr[indexStart + 39:indexStart + 39 + 31]
+                    if image[len(image) - 1:] != ' ':
+                        #print('downloading gallery image ' + str(image) + '...')
+                        fullfilename = os.path.join('Pictures/', str(count) + '.jpg')
+                        urllib.request.urlretrieve(image, fullfilename)
+                        print(str(index) + ': Successful')
+                        submissionsClean.append(i)
+                        count += 1
+                    else:
+                        print(str(index) + ': Gallery was loaded, but no images inside')
                 else:
-                    print(str(index) + 'gallery was loaded, but no images inside')
-            else:
-                print(str(index) + 'no images in this gallery')
+                    print(str(index) + ': No images in this gallery')
+            except:
+                print(str(index) + ': Bytes decode issue - issue with loading webpage')
     index += 1
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+# find faces in images
+
+from PIL import Image
+import face_recognition
+import os
+import glob
+
+picturesPath = os.path.expanduser('~/Pictures')
+files = glob.glob(picturesPath + '/*.jpg')
+for myFile in sorted(files):
+    image = face_recognition.load_image_file(myFile)
+    face_locations = face_recognition.face_locations(image, number_of_times_to_upsample=0, model="cnn")
+    print("I found {} face(s) in this photograph.".format(len(face_locations)))
+    for face_location in face_locations:
+        top, right, bottom, left = face_location
+        face_image = image[top:bottom, left:right]
+        pil_image = Image.fromarray(face_image)
+        pil_image.save(os.path.join('Pictures/faces/', myFile))
 
 # make an even cleaner submissions list by only including those with an age and sex
                 
