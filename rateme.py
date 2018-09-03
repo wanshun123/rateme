@@ -66,7 +66,18 @@ comments = list(api.search_comments(subreddit='rateme', filter=['body', 'link_id
 comments = [v[::2] for v in comments]
 comments = [v[0:2] for v in comments]
 
-p = re.compile("[0-9]\.?[0-9]?\/10")
+'''
+with open("sc6.csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerows(sc6)
+    
+with open('comments.csv', 'r') as f:
+    reader = csv.reader(f)
+    comments = list(reader)
+   
+'''
+
+p = re.compile("[0-9]\.?[0-9]+?\/10")
 
 ratings = []
 
@@ -77,7 +88,7 @@ for i in comments:
     if len(p.findall(i[0])) > 0:
         rating = re.search("[0-9]\.?[0-9]?", p.findall(i[0])[0])[0]
         ratings.append([rating, i[1], i[0]])
-        comments[count] = i + (rating,)
+        #comments[count] = i + (rating,)
     count += 1
 
 # get rid of the t3_ in ratings[]
@@ -87,6 +98,8 @@ for i in ratings:
 
 # check ratings and comments for a given link_id
 # good example is returnRatings("9b31zo")
+
+# returnRatings("95fcs0")
    
 def returnRatings(link_id):   
     ratingsArray = []
@@ -117,11 +130,14 @@ for i in submissionsDirect:
         ratingsArray = [float(i) for i in ratingsArray]
         average = sum(ratingsArray)/len(ratingsArray)
         #SubmissionsDR[totalAdditions] = i + (average,)
-        submissionsDR.append(i + (average,))
+        #submissionsDR.append(i + (average,))
+        submissionsDR.append([i[0], i[1], i[2], i[3], i[4], average])
         totalAdditions += 1
-        print('rating added to submissionsDR for submission from submissionsDirect at index ' + str(count) + ' ~ ' + str(totalAdditions))
+        print('rating added: ' + str(count) + ' ~ ' + str(totalAdditions))
     count += 1
 
+#print('rating added to submissionsDR for submission from submissionsDirect at index ' + str(count) + ' ~ ' + str(totalAdditions))
+    
 # to download images
 
 import urllib.request, urllib.error
@@ -136,8 +152,8 @@ submissionsClean = []
 
 import time
 
-#count = 6847
-#index = 9690
+#count = 21419
+#index = 26599
 count = 0
 index = 0
 for i in submissionsDR[index:len(submissionsDR)]:
@@ -197,11 +213,20 @@ for i in submissionsDR[index:len(submissionsDR)]:
     index += 1
 
     
+sc1 = []
+sc2 = []
+sc3 = []
+sc4 = []
+sc5 = []
+sc6 = []
     
-    
-    
-    
-    
+for i in submissionsClean:
+    sc1.append(i[0])
+    sc2.append(i[1])
+    sc3.append(i[2])
+    sc4.append(i[3])
+    sc5.append(i[4])
+    sc6.append(i[5])
     
     
     
@@ -215,16 +240,22 @@ import glob
 
 picturesPath = os.path.expanduser('~/Pictures')
 files = glob.glob(picturesPath + '/*.jpg')
+count = 0
 for myFile in sorted(files):
-    image = face_recognition.load_image_file(myFile)
-    face_locations = face_recognition.face_locations(image, number_of_times_to_upsample=0, model="cnn")
-    print("I found {} face(s) in this photograph.".format(len(face_locations)))
-    for face_location in face_locations:
-        top, right, bottom, left = face_location
-        face_image = image[top:bottom, left:right]
-        pil_image = Image.fromarray(face_image)
-        pil_image.save(os.path.join('Pictures/faces/', myFile))
+    if count < 5:
+        image = face_recognition.load_image_file(myFile)
+        face_locations = face_recognition.face_locations(image, number_of_times_to_upsample=0, model="cnn")
+        print("I found {} face(s) in this photograph.".format(len(face_locations)))
+        for face_location in face_locations:
+            top, right, bottom, left = face_location
+            face_image = image[top:bottom, left:right]
+            pil_image = Image.fromarray(face_image)
+            pil_image.save(os.path.join('Pictures/faces/', myFile))
+            count += 1
+            print('face saved')
 
+'''
+        
 # make an even cleaner submissions list by only including those with an age and sex
                 
 sc = []
@@ -239,6 +270,8 @@ pr = []
 
 for i in submissionsClean:
     pr.append(i[5])
+    
+'''
     
 # start analysis
 # run a face detection script and save only THOSE images - won't work if images are all different aspect ratios - face detection script will make square images containing just the face
