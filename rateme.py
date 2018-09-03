@@ -212,6 +212,65 @@ for i in submissionsDR[index:len(submissionsDR)]:
                 print(str(index) + ': Bytes decode issue - issue with loading webpage')
     index += 1
 
+'''
+for i in submissionsClean[10005:10006]:
+    if index % 100 == 0:
+        #sleep for a bit
+        print('taking a nap...')
+        time.sleep(5)
+    url = i[2]
+    #print(str(index) + ': ' + str(i) + ' starting...')
+    if (".jpg" in url) or (".jpeg" in url) or (".png" in url) or (".gif" in url):
+        try:
+            conn = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            print(str(index) + ': HTTPError: {}'.format(e.code))
+        except urllib.error.URLError as e:
+            print(str(index) + ': URLError: {}'.format(e.reason))
+        else:
+            fullfilename = os.path.join('Pictures/', str(10005) + '.jpg')
+            urllib.request.urlretrieve(url, fullfilename)
+            #print('downloaded image ' + str(url))
+            print(str(index) + ': Successful')
+            #submissionsClean.append(i)
+            count += 1
+    else:
+        # imgur album
+        time.sleep(0.1)
+        galleryID = url[-7:]
+        #print('quering gallery ID ' + str(galleryID) + '...')
+        try:
+            conn = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            print('HTTPError: {}'.format(e.code))
+        except urllib.error.URLError as e:
+            print('URLError: {}'.format(e.reason))
+        else:
+            fp = urllib.request.urlopen(url)
+            mybytes = fp.read()
+            try:
+                mystr = mybytes.decode("utf8")
+                fp.close()
+                indexStart = mystr.find("<link rel=\"image_src\"            href=\"")
+                if indexStart > 0:
+                    image = mystr[indexStart + 39:indexStart + 39 + 31]
+                    if image[len(image) - 1:] != ' ':
+                        #print('downloading gallery image ' + str(image) + '...')
+                        fullfilename = os.path.join('Pictures/', str(10005) + '.jpg')
+                        urllib.request.urlretrieve(image, fullfilename)
+                        print(str(index) + ': Successful')
+                        #submissionsClean.append(i)
+                        count += 1
+                    else:
+                        print(str(index) + ': Gallery was loaded, but no images inside')
+                else:
+                    print(str(index) + ': No images in this gallery')
+            except:
+                print(str(index) + ': Bytes decode issue - issue with loading webpage')
+    index += 1
+'''
+    
+    
     
 sc1 = []
 sc2 = []
@@ -229,7 +288,18 @@ for i in submissionsClean:
     sc6.append(i[5])
     
     
-    
+'''
+0
+1
+10
+100
+1000
+10001
+10002
+10003
+10004
+10005
+'''
     
 # find faces in images
 
@@ -238,21 +308,29 @@ import face_recognition
 import os
 import glob
 
+facesOnly = []
 picturesPath = os.path.expanduser('~/Pictures')
 files = glob.glob(picturesPath + '/*.jpg')
 count = 0
 for myFile in sorted(files):
     if count < 5:
+        fileName = myFile[26:]
+        index = int(fileName[0:len(fileName) -4])
+        #print(index)
         image = face_recognition.load_image_file(myFile)
-        face_locations = face_recognition.face_locations(image, number_of_times_to_upsample=0, model="cnn")
-        print("I found {} face(s) in this photograph.".format(len(face_locations)))
-        for face_location in face_locations:
-            top, right, bottom, left = face_location
-            face_image = image[top:bottom, left:right]
-            pil_image = Image.fromarray(face_image)
-            pil_image.save(os.path.join('Pictures/faces/', myFile))
-            count += 1
-            print('face saved')
+        #face_locations = face_recognition.face_locations(image, number_of_times_to_upsample=0, model="cnn")
+        face_locations = face_recognition.face_locations(image, number_of_times_to_upsample=0)
+        if len(face_locations) == 1:
+            for face_location in face_locations:
+                top, right, bottom, left = face_location
+                face_image = image[top:bottom, left:right]
+                pil_image = Image.fromarray(face_image)
+                pil_image.save('/home/paperspace/faces/' + fileName, 'JPEG')
+                print('face saved for ' + fileName + ' ~ ' + str(count))
+                facesOnly.append(submissionsClean[index])
+        else:
+            print(len(face_locations) + ' faces found for ' + fileName + ' - not saving' + ' ~ ' + str(count))
+        count += 1
 
 '''
         
